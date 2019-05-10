@@ -1,5 +1,7 @@
 import requests as req
-
+import dns.resolver
+import socket
+from urllib.parse import urlparse
 
 class Scan:
     def __init__(self, ip, maskOCT):
@@ -66,18 +68,22 @@ class Scan:
                     print("")
                     try:
                         print("Code: ", code)
+                        print("Name: " + self.name(addresDEC))
+                        print("Title: " + self.title("http://"+addresDEC))
+                        print("Email: " + str(self.mail("http://" + addresDEC)))
                         print("DNS Address: " + self.address("http://" + addresDEC))
-                        print("Title: " + self.name("http://"+addresDEC))
+
                         print("Server: " + self.server("http://"+addresDEC))
+
                     except:
                         try:
                             print("Address: " + addresDEC)
-                            print("Title: " + self.name("http://" + addresDEC))
-                            print("Server: " + self.server("http://" + addresDEC))
+                            print("Email: " + str(self.mail2("http://" + addresDEC)))
+
                         except:
                               try:
-                                print("Title: " + self.name("http://" + addresDEC))
-                                print("Server: " + self.server("http://" + addresDEC))
+                                  continue
+
                               except:
                                   continue
 
@@ -94,6 +100,9 @@ class Scan:
         return(short)
 
     def name(self, url):
+        return(socket.gethostbyaddr(url)[0])
+
+    def title(self, url):
         resp = req.head(url)
         n = req.get(url, resp.headers)
         name1 = n.text
@@ -112,6 +121,22 @@ class Scan:
         resp = req.head(url)
         server = str(resp.headers['server'])
         return(server)
+
+    def mail(self, url):
+        resp = req.head(url)
+        address = str(resp.headers['Location'])
+        location = urlparse(address).netloc
+        mailadr = (dns.resolver.query(location, 'SOA')[0]).rname
+
+        return(mailadr)
+
+    def mail2(self, url):
+        resp = req.head(url)
+        address = str(resp.headers['server'])
+        location = urlparse(address).netloc
+        mailadr = (dns.resolver.query(location, 'SOA')[0]).rname
+
+        return(mailadr)
 
 
 Scan("156.17.88.0", 24)
